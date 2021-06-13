@@ -68,3 +68,13 @@ void oled_display2(const char * message)
 		i++;
 	}
 }
+
+void oled_clear_display1()
+{
+	oled_display1("                ");
+}
+
+void oled_clear_display2()
+{
+	oled_display2("                ");
+}
