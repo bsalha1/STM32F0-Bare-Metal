@@ -35,6 +35,11 @@ enum gpio_port {
     GPIO_PORT_F = 5,
 };
 
+struct gpio_pin {
+    enum gpio_port port;
+    uint8_t pin;
+};
+
 enum gpio_mode {
     MODE_INPUT = 0x00,
     MODE_OUTPUT = 0x01,

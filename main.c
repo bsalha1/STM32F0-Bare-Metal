@@ -1,3 +1,4 @@
+#include "compile.h"
 #include "bool.h"
 #include "rcc.h"
 #include "gpio.h"
@@ -55,11 +56,12 @@ void reset(void)
         oled_display2("EEPROM: SR fail");
         return;
     }
+
 }
 
 int STACK[256];
 
-const void* vectors[] __attribute__((section(".vectors"))) = {
+VECTOR_CODE const void* vectors[] = {
     STACK + sizeof(STACK) / sizeof(*STACK),
     reset
 };
