@@ -8,16 +8,21 @@
 #include "time.h"
 #include "stk.h"
 #include "nvic.h"
+#include "scb.h"
 
 void reset_handler(void)
 {
+    // Initialize Time-Keeping // 
+    time_init();
+    enable_stk(1); // 1 millisecond timer on SysTick interrupt
+
     enable_gpio(GPIO_PORT_C);
     set_gpio_mode(GPIO_PORT_C, 11, MODE_OUTPUT);
+    set_gpio_mode(GPIO_PORT_C, 12, MODE_OUTPUT);
     set_gpio_output(GPIO_PORT_C, 11, 1);
+    set_gpio_output(GPIO_PORT_C, 12, 1);
 
-    // Enable SysTick interrupt
-    enable_stk(10000000);
-
+    // Initialize Display //
     oled_init();
     oled_display1("Booting up...");
     
@@ -64,55 +69,69 @@ void reset_handler(void)
         return;
     }
 
+    oled_printf("Hello world this is a dbg: %d", 689);
+    
+    while(1)
+    {
+        for(int i = 0; i < 500000; i++);
+        set_gpio_output(GPIO_PORT_C, 12, 1 ^ get_gpio_output(GPIO_PORT_C, 12));
+    }
+
 }
 
-__WEAK__ void nmi_handler(void) { }
-__WEAK__ void hard_fault_handler(void) {}
-__WEAK__ void svcall_handler(void) { }
-__WEAK__ void pendsv_handler(void) { }
+__interrupt__ void nmi_handler(void) { }
+__interrupt__ void hard_fault_handler(void) {}
+__interrupt__ void svcall_handler(void) { }
+__interrupt__ void pendsv_handler(void) { }
 
-__WEAK__ void systick_handler(void)
+__interrupt__ void systick_handler(void)
 {
-    set_gpio_output(GPIO_PORT_C, 11, 1 ^ get_gpio_output(GPIO_PORT_C, 11));
+    time_increment_millis();
 }
 
-__WEAK__ void wwdg_handler(void) { }
-__WEAK__ void pvd_vddio_2_handler(void) { }
-__WEAK__ void rtc_handler(void) { }
-__WEAK__ void flash_handler(void) { }
-__WEAK__ void rcc_crs_handler(void) { }
-__WEAK__ void exti0_1_handler(void) { }
-__WEAK__ void exti2_3_handler(void) { }
-__WEAK__ void exti4_15_handler(void) { }
-__WEAK__ void tsc_handler(void) { }
-__WEAK__ void dma_ch1_handler(void) { }
-__WEAK__ void dma_ch2_3_dma2_ch1_2_handler(void) { }
-__WEAK__ void dma_ch4_7_dma2_ch3_5_handler(void) { }
-__WEAK__ void adc_comp_handler(void) { }
-__WEAK__ void tim1_brk_up_trg_com_handler(void) { }
-__WEAK__ void tim1_cc_handlerm(void) { }
-__WEAK__ void tim2_handler(void) { }
-__WEAK__ void tim3_handler(void) { }
-__WEAK__ void tim6_dac_handler(void) { }
-__WEAK__ void tim7_handler(void) { }
-__WEAK__ void tim14_handler(void) { }
-__WEAK__ void tim15_handler(void) { }
-__WEAK__ void tim16_handler(void) { }
-__WEAK__ void tim17_handler(void) { }
-__WEAK__ void i2c1_handler(void) { }
-__WEAK__ void i2c2_handler(void) { }
-__WEAK__ void spi1_handler(void) { }
-__WEAK__ void spi2_handler(void) { }
-__WEAK__ void usart1_handler(void) { }
-__WEAK__ void usart2_handler(void) { }
-__WEAK__ void usart3_8_handler(void) { }
-__WEAK__ void cec_can_handler(void) { }
-__WEAK__ void usb_handler(void) { }
+__interrupt__ void wwdg_handler(void) { }
+__interrupt__ void pvd_vddio_2_handler(void) { }
+__interrupt__ void rtc_handler(void) { }
+__interrupt__ void flash_handler(void) { }
+__interrupt__ void rcc_crs_handler(void) { }
+__interrupt__ void exti0_1_handler(void) { }
+__interrupt__ void exti2_3_handler(void) { }
+__interrupt__ void exti4_15_handler(void) { }
+__interrupt__ void tsc_handler(void) { }
+__interrupt__ void dma_ch1_handler(void) { }
+__interrupt__ void dma_ch2_3_dma2_ch1_2_handler(void) { }
+__interrupt__ void dma_ch4_7_dma2_ch3_5_handler(void) { }
+__interrupt__ void adc_comp_handler(void) { }
+__interrupt__ void tim1_brk_up_trg_com_handler(void) { }
+__interrupt__ void tim1_cc_handler(void) { }
+__interrupt__ void tim2_handler(void) { }
+__interrupt__ void tim3_handler(void) { }
+__interrupt__ void tim6_dac_handler(void) { }
+__interrupt__ void tim7_handler(void) { }
+__interrupt__ void tim14_handler(void) { }
+__interrupt__ void tim15_handler(void) { }
+__interrupt__ void tim16_handler(void) { }
+__interrupt__ void tim17_handler(void) { }
+__interrupt__ void i2c1_handler(void) { }
+__interrupt__ void i2c2_handler(void) { }
+__interrupt__ void spi1_handler(void) { }
+__interrupt__ void spi2_handler(void) { }
+__interrupt__ void usart1_handler(void) { }
+__interrupt__ void usart2_handler(void) { }
+__interrupt__ void usart3_8_handler(void) { }
+__interrupt__ void cec_can_handler(void) { }
+__interrupt__ void usb_handler(void) { }
 
-int STACK[256];
+int stack[STACK_SIZE];
 
-__VECTOR__ const void* vectors[] = {
-    STACK + sizeof(STACK) / sizeof(*STACK),
+// Interrupt Vector Table
+// In ARMv6 Manual Table B1-3 Exception Numbers
+__vector__ const void* vectors[] = {
+
+    // Initialize stack to one value higher than highest memory in stack
+    (void*) &stack[STACK_SIZE],
+
+    // ARM Interrupts //
     reset_handler,       // Reset
     nmi_handler,         // Non maskable interrupt
     hard_fault_handler,  // All class of fault
@@ -128,6 +147,8 @@ __VECTOR__ const void* vectors[] = {
     0,
     pendsv_handler,      // Pendable request for system service
     systick_handler,     // System tick timer
+
+    // External Interrupts //
     wwdg_handler,        // Window watchdog interrupt
     pvd_vddio_2_handler, // PVD and VDDIO2 supply comparator interrupt
     rtc_handler,         // RTC interrupts
@@ -142,7 +163,7 @@ __VECTOR__ const void* vectors[] = {
     dma_ch4_7_dma2_ch3_5_handler, // DMA channel 4-7 and DMA2 channel 3-5 interrupts
     adc_comp_handler,             // ADC and COMP interrupts
     tim1_brk_up_trg_com_handler,  // TIM1 break, update, trigger and commutation interrupt
-    tim1_cc_handlerm,  // TIM1 capture compare interrupt
+    tim1_cc_handler,  // TIM1 capture compare interrupt
     tim2_handler,      // TIM2 global interrupt
     tim3_handler,      // TIM3 global interrupt
     tim6_dac_handler,  // TIM6 global interrupt and DAC underrun interrupt

@@ -1,5 +1,5 @@
-#ifndef _OS_ASSERT_H
-#define _OS_ASSERT_H
+#ifndef OS_ASSERT_H
+#define OS_ASSERT_H
 
 #include "oled_1602a.h"
 
@@ -9,4 +9,4 @@
         oled_display1(message); \
     } \
 
-#endif // _OS_ASSERT_H
+#endif // OS_ASSERT_H

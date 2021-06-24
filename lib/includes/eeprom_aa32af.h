@@ -3,7 +3,7 @@
 
 /**
  * This is a driver for a 4KB EEPROM http://ww1.microchip.com/downloads/en/devicedoc/22184a.pdf
- * 1 Page = 32B
+ * 1 Page = 32 Bytes
  */
 
 #include "int.h"

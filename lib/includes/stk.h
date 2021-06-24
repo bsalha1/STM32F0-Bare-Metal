@@ -1,5 +1,5 @@
-#ifndef _STK_H_
-#define _STK_H_
+#ifndef STK_H_
+#define STK_H_
 
 #include "int.h"
 
@@ -21,6 +21,10 @@ struct stk {
     uint32_t calib;
 };
 
-void enable_stk(uint32_t reload);
+/**
+ * @brief Enables SysTick interrupt every period_ms milliseconds
+ * @param period_ms The period of the SysTick interrupt in milliseconds
+ **/
+void enable_stk(uint32_t period_ms);
 
-#endif // _STK_H_
+#endif // STK_H_
